@@ -137,6 +137,33 @@ body {
   overflow: hidden;
 }
 
+/* ── 移动端响应式 ──────────────────────────── */
+@media (max-width: 640px) {
+  #toolbar {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 44px;
+    padding: 6px 8px;
+    gap: 5px;
+    row-gap: 6px;
+  }
+  /* 小屏上隐藏分隔线和提示文字，避免占位 */
+  .sep  { display: none; }
+  .hint { display: none; }
+
+  /* 加大触摸目标 */
+  #toolbar button,
+  .btn-tool {
+    padding: 6px 10px;
+    min-height: 36px;
+    font-size: 13px;
+  }
+  #colorPicker   { width: 36px; height: 36px; }
+  #lineWidth     { width: 60px; }
+  #textFontSize  { height: 32px; }
+  #textFontFamily{ width: 85px; height: 32px; }
+}
+
 /* ── 画板区 ──────────────────────────────── */
 #canvasArea {
   flex: 1;

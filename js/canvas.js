@@ -59,6 +59,13 @@ const CanvasManager = (() => {
   // ── 空格平移标志 ─────────────────────────────────────────────
   let spaceDown = false;
 
+  // ── 触摸 / 捏合缩放状态 ───────────────────────────────────────
+  let pinching        = false;
+  let pinchStartDist  = 0;
+  let pinchStartScale = 1;
+  let pinchStartTx    = 0, pinchStartTy = 0;
+  let pinchStartMidX  = 0, pinchStartMidY = 0;
+
   // ═══════════════════════════════════════════════════════════
   //  坐标转换
   // ═══════════════════════════════════════════════════════════
@@ -766,6 +773,69 @@ const CanvasManager = (() => {
   }
 
   // ═══════════════════════════════════════════════════════════
+  //  触摸事件（移动端）
+  // ═══════════════════════════════════════════════════════════
+
+  /** 将 Touch 对象转为鼠标事件的最小兼容形式 */
+  function touchSynth(touch) {
+    return { clientX: touch.clientX, clientY: touch.clientY, button: 0, buttons: 1, shiftKey: false };
+  }
+
+  function onTouchStart(e) {
+    e.preventDefault();
+    if (e.touches.length === 1 && !pinching) {
+      onMouseDown(touchSynth(e.touches[0]));
+    } else if (e.touches.length === 2) {
+      // 进入捏合模式：取消正在进行的绘制/拖拽
+      pinching = true;
+      if (isDrawing) { isDrawing = false; currentPoints = []; clearPauseTimer(); redrawDynamic(); }
+      if (dragging)  { dragging = false; }
+
+      const t1 = e.touches[0], t2 = e.touches[1];
+      const rect = dynamicCanvas.getBoundingClientRect();
+      const dpr  = window.devicePixelRatio || 1;
+      pinchStartDist  = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+      pinchStartScale = vp.scale;
+      pinchStartTx    = vp.tx;
+      pinchStartTy    = vp.ty;
+      pinchStartMidX  = ((t1.clientX + t2.clientX) / 2 - rect.left) * dpr;
+      pinchStartMidY  = ((t1.clientY + t2.clientY) / 2 - rect.top)  * dpr;
+    }
+  }
+
+  function onTouchMove(e) {
+    e.preventDefault();
+    if (pinching && e.touches.length >= 2) {
+      const t1   = e.touches[0], t2 = e.touches[1];
+      const rect = dynamicCanvas.getBoundingClientRect();
+      const dpr  = window.devicePixelRatio || 1;
+      const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+      const mx   = ((t1.clientX + t2.clientX) / 2 - rect.left) * dpr;
+      const my   = ((t1.clientY + t2.clientY) / 2 - rect.top)  * dpr;
+
+      const newScale = Math.max(0.2, Math.min(10, pinchStartScale * dist / (pinchStartDist || 1)));
+      // 保持捏合起始中点下的图像坐标不变，同时跟随手指平移
+      const imgX = (pinchStartMidX - pinchStartTx) / pinchStartScale;
+      const imgY = (pinchStartMidY - pinchStartTy) / pinchStartScale;
+      vp.scale = newScale;
+      vp.tx    = mx - imgX * newScale;
+      vp.ty    = my - imgY * newScale;
+      redrawStatic(); redrawDynamic();
+    } else if (!pinching && e.touches.length === 1) {
+      onMouseMove(touchSynth(e.touches[0]));
+    }
+  }
+
+  function onTouchEnd(e) {
+    e.preventDefault();
+    if (pinching) {
+      if (e.touches.length < 2) pinching = false;
+      return;
+    }
+    if (e.changedTouches.length) onMouseUp(touchSynth(e.changedTouches[0]));
+  }
+
+  // ═══════════════════════════════════════════════════════════
   //  批注移动
   // ═══════════════════════════════════════════════════════════
 
@@ -978,6 +1048,12 @@ const CanvasManager = (() => {
     dynamicCanvas.addEventListener('mouseup',    onMouseUp);
     dynamicCanvas.addEventListener('mouseleave', onMouseLeave);
     dynamicCanvas.addEventListener('wheel',      onWheel, { passive: false });
+
+    // 触摸事件（移动端）
+    dynamicCanvas.addEventListener('touchstart',  onTouchStart,  { passive: false });
+    dynamicCanvas.addEventListener('touchmove',   onTouchMove,   { passive: false });
+    dynamicCanvas.addEventListener('touchend',    onTouchEnd,    { passive: false });
+    dynamicCanvas.addEventListener('touchcancel', onTouchEnd,    { passive: false });
 
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup',   onKeyUp);
