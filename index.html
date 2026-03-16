@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>作业批注</title>
+  <link rel="stylesheet" href="css/main.css">
+  <!-- 中文手写体字体（Google Fonts） -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Liu+Jian+Mao+Cao&family=Long+Cang&family=Zhi+Mang+Xing&display=swap" rel="stylesheet">
+</head>
+<body>
+<div id="app">
+  <!-- ── 顶部工具栏 ── -->
+  <div id="toolbar">
+    <label class="toggle-wrap" title="开启后画完一笔自动识别并美化为标准图形">
+      <span class="tl">自动美化</span>
+      <input type="checkbox" id="autoBeautify" checked>
+      <span class="toggle-slider"></span>
+    </label>
+
+    <div class="sep"></div>
+
+    <span class="tl">颜色</span>
+    <input type="color" id="colorPicker" value="#e53935">
+
+    <span class="tl">粗细</span>
+    <input type="range" id="lineWidth" min="1" max="12" value="2">
+    <span id="lineWidthVal">2</span>
+
+    <div class="sep"></div>
+
+    <button id="btnToolPen"  class="btn-tool btn-tool-active" title="画笔工具（自由绘制）">✏ 画笔</button>
+    <button id="btnToolText" class="btn-tool" title="文字工具（点击画布插入文字）">T 文字</button>
+
+    <div class="sep"></div>
+
+    <span class="tl">字号</span>
+    <select id="textFontSize" title="文字字号（CSS px）">
+      <option value="12">12</option>
+      <option value="14">14</option>
+      <option value="16">16</option>
+      <option value="18" selected>18</option>
+      <option value="20">20</option>
+      <option value="24">24</option>
+      <option value="28">28</option>
+      <option value="36">36</option>
+      <option value="48">48</option>
+    </select>
+
+    <span class="tl">字体</span>
+    <select id="textFontFamily" title="文字字体">
+      <optgroup label="手写体">
+        <option value='"Ma Shan Zheng",cursive' selected>马善政（毛笔楷）</option>
+        <option value='"Liu Jian Mao Cao",cursive'>流间毛草（草书）</option>
+        <option value='"Long Cang",cursive'>龙藏（随意写）</option>
+        <option value='"Zhi Mang Xing",cursive'>智芒星（潦草）</option>
+      </optgroup>
+      <optgroup label="印刷体">
+        <option value='"Microsoft YaHei","PingFang SC",sans-serif'>微软雅黑</option>
+        <option value='"SimSun","宋体",serif'>宋体</option>
+        <option value='"KaiTi","楷体",serif'>楷体</option>
+      </optgroup>
+    </select>
+
+    <button id="btnUndo"   title="撤销 Ctrl+Z">↩ 撤销</button>
+    <button id="btnRedo"   title="重做 Ctrl+Y">↪ 重做</button>
+    <button id="btnClear"  title="清除全部批注">清除批注</button>
+    <button id="btnExport" class="btn-accent" title="合成底图+批注并下载">⬇ 导出图片</button>
+
+    <div class="sep"></div>
+    <span class="tl hint" id="hintText">在画板上自由书写，画完停顿自动美化</span>
+  </div>
+
+  <!-- ── 主体 ── -->
+  <div id="main">
+    <!-- 画板区 -->
+    <div id="canvasArea">
+      <!--
+        staticCanvas  : 底图 + 已完成批注（仅在变更时重绘）
+        dynamicCanvas : 当前正在绘制的笔迹 + 选中控制框（实时重绘）
+      -->
+      <canvas id="staticCanvas"></canvas>
+      <canvas id="dynamicCanvas"></canvas>
+      <!-- 文字批注输入框（绝对定位，叠加在 canvas 上） -->
+      <textarea id="floatTextInput" spellcheck="false"></textarea>
+    </div>
+
+  </div>
+</div>
+
+<script src="js/shapeRecognize.js"></script>
+<script src="js/annotations.js"></script>
+<script src="js/exportImage.js"></script>
+<script src="js/canvas.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

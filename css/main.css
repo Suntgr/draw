@@ -1,0 +1,225 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", sans-serif;
+  background: #e8eaf0;
+  height: 100vh;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* ── App 容器 ──────────────────────────────── */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* ── 工具栏 ──────────────────────────────── */
+#toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  height: 48px;
+  background: #1e1e2e;
+  color: #cdd6f4;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,.4);
+  z-index: 100;
+}
+
+.tl { font-size: 12px; color: #a6adc8; white-space: nowrap; }
+.hint { font-size: 11px; color: #585b70; margin-left: auto; }
+
+.sep {
+  width: 1px; height: 22px;
+  background: rgba(255,255,255,.12);
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+
+/* Toggle switch */
+.toggle-wrap {
+  display: flex; align-items: center; gap: 6px;
+  cursor: pointer; white-space: nowrap;
+}
+.toggle-wrap input[type=checkbox] { display: none; }
+.toggle-slider {
+  width: 36px; height: 20px;
+  background: #45475a;
+  border-radius: 10px;
+  position: relative;
+  transition: background .2s;
+  flex-shrink: 0;
+}
+.toggle-slider::after {
+  content: '';
+  position: absolute;
+  width: 14px; height: 14px;
+  background: #cdd6f4;
+  border-radius: 50%;
+  top: 3px; left: 3px;
+  transition: left .2s;
+}
+.toggle-wrap input:checked ~ .toggle-slider { background: #a6e3a1; }
+.toggle-wrap input:checked ~ .toggle-slider::after { left: 19px; background: #1e1e2e; }
+
+/* 颜色与线宽 */
+#colorPicker {
+  width: 28px; height: 28px;
+  border: none; border-radius: 4px;
+  cursor: pointer; background: none;
+  padding: 0;
+}
+#lineWidth { width: 70px; accent-color: #89b4fa; }
+#lineWidthVal { font-size: 12px; color: #a6adc8; width: 14px; }
+
+#textFontSize, #textFontFamily {
+  background: #2a2a3e;
+  color: #cdd6f4;
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 12px;
+  cursor: pointer;
+  height: 26px;
+}
+#textFontSize { width: 52px; }
+#textFontFamily { width: 90px; }
+
+/* 按钮 */
+#toolbar button {
+  padding: 4px 10px;
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 5px;
+  background: transparent;
+  color: #cdd6f4;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background .15s, color .15s;
+  white-space: nowrap;
+}
+#toolbar button:hover  { background: rgba(255,255,255,.12); }
+#toolbar button:active { background: rgba(255,255,255,.22); }
+
+.btn-accent {
+  background: #89b4fa !important;
+  color: #1e1e2e !important;
+  border-color: transparent !important;
+  font-weight: 600;
+}
+.btn-accent:hover { background: #74c7ec !important; }
+
+/* 工具按钮 */
+.btn-tool {
+  padding: 4px 10px;
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 5px;
+  background: transparent;
+  color: #cdd6f4;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background .15s, color .15s, border-color .15s;
+  white-space: nowrap;
+}
+.btn-tool:hover { background: rgba(255,255,255,.12); }
+.btn-tool-active {
+  background: rgba(137,180,250,.18) !important;
+  border-color: #89b4fa !important;
+  color: #89b4fa !important;
+}
+
+/* ── 主体区域 ──────────────────────────────── */
+#main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── 画板区 ──────────────────────────────── */
+#canvasArea {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #313244;
+  cursor: crosshair;
+}
+
+#staticCanvas,
+#dynamicCanvas {
+  position: absolute;
+  top: 0; left: 0;
+  image-rendering: pixelated;
+}
+#staticCanvas  { z-index: 1; }
+#dynamicCanvas { z-index: 2; }
+
+/* 平移时临时改光标 */
+#canvasArea.panning { cursor: grab; }
+#canvasArea.panning:active { cursor: grabbing; }
+
+/* ── 浮动文字输入框 ──────────────────────────── */
+/*
+  textarea 完全透明：文字由 canvas 实时渲染，textarea 只负责接收键盘输入
+  和显示光标。这样彻底消除 CSS px / canvas 坐标 / DPR 之间的换算误差。
+*/
+#floatTextInput {
+  position: absolute;
+  z-index: 10;
+  display: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  outline: none;
+  background: transparent;
+  color: transparent;      /* 隐藏 textarea 自身的文字渲染 */
+  cursor: crosshair;       /* 鼠标指针保持十字星，与画布一致 */
+  caret-color: #e53935;    /* 仅文字插入光标可见 */
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* ── 右侧备注栏 ──────────────────────────────── */
+#rightPanel {
+  width: 280px;
+  flex-shrink: 0;
+  background: #fff;
+  border-left: 1px solid #cdd6f4;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -3px 0 12px rgba(0,0,0,.1);
+}
+
+.panel-title {
+  padding: 12px 16px;
+  font-weight: 700;
+  font-size: 13px;
+  color: #444;
+  background: #f8f9ff;
+  border-bottom: 1px solid #eee;
+  letter-spacing: .5px;
+}
+
+#remarks {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  outline: none;
+  resize: none;
+  font-size: 14px;
+  font-family: inherit;
+  line-height: 1.7;
+  color: #333;
+  user-select: text;
+}
+
+/* ── 选中控制点样式（Canvas 内绘制，这里只是注释） ── */
+/*
+  控制点在 Canvas 上用 ctx.fillStyle / arc 绘制，
+  不需要额外 DOM，见 canvas.js drawSelectionOverlay()
+*/
