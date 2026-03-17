@@ -1025,6 +1025,9 @@ const CanvasManager = (() => {
     floatTextInput.style.display = 'none';
     floatTextInput.value = '';
     editingTextId = null;
+    // 提交后自动切回画笔模式
+    textMode = false;
+    if (App.onTextModeEnd) App.onTextModeEnd();
     redrawStatic();
   }
 

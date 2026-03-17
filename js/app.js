@@ -205,6 +205,9 @@ function bindToolbar() {
   btnToolPen .addEventListener('click', () => selectTool('pen'));
   btnToolText.addEventListener('click', () => selectTool('text'));
 
+  // 文字提交后自动切回画笔（canvas.js 内部调用）
+  App.onTextModeEnd = () => selectTool('pen');
+
   // 撤销 / 重做
   document.getElementById('btnUndo').addEventListener('click', () => App.undo());
   document.getElementById('btnRedo').addEventListener('click', () => App.redo());
