@@ -60,7 +60,8 @@ const CanvasManager = (() => {
   let spaceDown = false;
 
   // ── 触摸 / 捏合缩放状态 ───────────────────────────────────────
-  let isTouchInteraction = false; // 当前 mousedown 是否由 touch 触发
+  let isTouchInteraction  = false; // 当前 mousedown 是否由 touch 触发
+  let isDrawingFromTouch  = false; // 当前笔画是否由 touch 发起
   let pinching        = false;
   let pinchStartDist  = 0;
   let pinchStartScale = 1;
@@ -434,8 +435,12 @@ const CanvasManager = (() => {
 
   function commitStroke() {
     if (currentPoints.length < 1) { currentPoints = []; return; }
-    // 单点 tap：复制一份，让 lineCap=round 渲染为圆点
-    if (currentPoints.length === 1) currentPoints.push({ ...currentPoints[0] });
+    // 移动端单点 tap：复制一份，让 lineCap=round 渲染为圆点
+    // PC 鼠标单击不绘制（保持原有行为）
+    if (currentPoints.length === 1) {
+      if (!isDrawingFromTouch) { currentPoints = []; return; }
+      currentPoints.push({ ...currentPoints[0] });
+    }
 
     App.saveUndo();
 
@@ -601,8 +606,9 @@ const CanvasManager = (() => {
     if (textMode) {
       createTextAnnotation(imgPt.x, imgPt.y);
     } else {
-      isDrawing     = true;
-      currentPoints = [{ x: imgPt.x, y: imgPt.y }];
+      isDrawing         = true;
+      isDrawingFromTouch = isTouchInteraction;
+      currentPoints     = [{ x: imgPt.x, y: imgPt.y }];
       resetPauseTimer();
     }
   }
