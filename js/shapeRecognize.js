@@ -147,20 +147,6 @@ function tryCircle(pts) {
   const pLen = pathLength(pts);
   if (pLen < approxCirc * 0.70) return null;
 
-  // 5. 无尖角：最大局部方向变化 < 50°（矩形等有棱角的形状在此被拒）
-  const WC  = Math.max(2, Math.floor(pts.length / 16));
-  const nC  = pts.length;
-  const dirC = pts.map((_, i) => {
-    const ia = (i - WC + nC) % nC, ib = (i + WC) % nC;
-    return Math.atan2(pts[ib].y - pts[ia].y, pts[ib].x - pts[ia].x);
-  });
-  for (let i = 0; i < nC; i++) {
-    let da = dirC[(i + WC) % nC] - dirC[(i - WC + nC) % nC];
-    while (da >  Math.PI) da -= 2 * Math.PI;
-    while (da < -Math.PI) da += 2 * Math.PI;
-    if (Math.abs(da) > Math.PI * 50 / 180) return null;
-  }
-
   return { type: 'circle', cx, cy, rx, ry };
 }
 
@@ -340,8 +326,7 @@ function tryRect(pts) {
   // 例：宽高 4:1 的矩形，短边占周长 1/10，80 点路径里短边约 8 点 → MIN_SEP ≈ 6
   // 这样宽矩形两个短边角点（间距仅 ~8 点）才不会因 MIN_SEP 太大被漏掉。
   const perimEst = 2 * (bb.w + bb.h);
-  // 除以 2 给角点间距留充裕容差（正方形时原公式值≈19/80，太接近理论极限）
-  const MIN_SEP = Math.max(3, Math.floor(n * Math.min(bb.w, bb.h) / perimEst / 2));
+  const MIN_SEP = Math.max(3, Math.floor(n * Math.min(bb.w, bb.h) / perimEst) - 1);
 
   // 用环形索引计算切线方向，避免路径首尾的角点被截断漏检
   const dirs = pts.map((_, i) => {
