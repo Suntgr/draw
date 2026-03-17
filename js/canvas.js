@@ -433,7 +433,9 @@ const CanvasManager = (() => {
   // ═══════════════════════════════════════════════════════════
 
   function commitStroke() {
-    if (currentPoints.length < 2) { currentPoints = []; return; }
+    if (currentPoints.length < 1) { currentPoints = []; return; }
+    // 单点 tap：复制一份，让 lineCap=round 渲染为圆点
+    if (currentPoints.length === 1) currentPoints.push({ ...currentPoints[0] });
 
     App.saveUndo();
 
