@@ -60,6 +60,7 @@ const CanvasManager = (() => {
   let spaceDown = false;
 
   // ── 触摸 / 捏合缩放状态 ───────────────────────────────────────
+  let isTouchInteraction = false; // 当前 mousedown 是否由 touch 触发
   let pinching        = false;
   let pinchStartDist  = 0;
   let pinchStartScale = 1;
@@ -539,7 +540,11 @@ const CanvasManager = (() => {
     // ── 已有选中批注：优先处理控制点和包围框 ──────────────────
     if (selectedId) {
       const sel = App.annotations.find(a => a.id === selectedId);
-      if (sel) {
+      // 移动端触摸：非文字批注不可选中/操作，直接清除选中
+      if (sel && isTouchInteraction && sel.type !== 'text') {
+        selectedId = null;
+        redrawStatic(); redrawDynamic();
+      } else if (sel) {
         if (sel.type === 'text') {
           // 1a. 文字：宽度拖拽手柄
           const wh = findTextWidthHandleHit(sel, imgPt.x, imgPt.y);
@@ -569,15 +574,18 @@ const CanvasManager = (() => {
           return;
         }
       }
-      // 3. 框外点击 → 取消选中，继续往下判断
-      selectedId = null;
-      redrawStatic();
-      redrawDynamic();
+      if (selectedId) {
+        // 框外点击 → 取消选中，继续往下判断
+        selectedId = null;
+        redrawStatic();
+        redrawDynamic();
+      }
     }
 
     // ── 线条精确命中 → 选中，统一准备拖拽（文字首次点击仅选中，不入编辑）
+    // 移动端触摸：只允许选中文字批注
     const hitAnn = findHit(imgPt.x, imgPt.y);
-    if (hitAnn) {
+    if (hitAnn && !(isTouchInteraction && hitAnn.type !== 'text')) {
       selectedId      = hitAnn.id;
       dragging        = true;
       dragStartImgX   = imgPt.x;
@@ -784,7 +792,9 @@ const CanvasManager = (() => {
   function onTouchStart(e) {
     e.preventDefault();
     if (e.touches.length === 1 && !pinching) {
+      isTouchInteraction = true;
       onMouseDown(touchSynth(e.touches[0]));
+      isTouchInteraction = false;
     } else if (e.touches.length === 2) {
       // 进入捏合模式：取消正在进行的绘制/拖拽
       pinching = true;
